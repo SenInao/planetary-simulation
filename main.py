@@ -5,10 +5,10 @@ WIDTH = 600
 HEIGHT = 600
 G = 6.67*10**-11
 DT = 14600*10
-SCALE = 15.9e9
+SCALE = 1.9e9
 
 class Object:
-    def __init__(self, x, y, vel, width, m, colour) -> None:
+    def __init__(self, x, y, vel, width, m, colour, display_scale=1.0) -> None:
         self.x = x
         self.y = y
         self.vel = vel
@@ -16,6 +16,8 @@ class Object:
         self.colour = colour
         self.m = m
         self.prev = [(x - vel[0] * DT, y - vel[1] * DT)]
+        
+        self.display_scale = display_scale
 
     def calcFg(self, sun):
         r = math.sqrt((self.x-sun.x)**2+(self.y-sun.y)**2)
@@ -45,26 +47,26 @@ class Object:
         self.x, self.y = newx, newy
 
     def draw(self, screen):
-        scaledx = int(self.x/SCALE+WIDTH/2)
-        scaledy = int(self.y/SCALE+HEIGHT/2)
-        pygame.draw.circle(screen, self.colour, (scaledx,scaledy), self.width)
+        scaledx = int(self.x*scale_multiplier/SCALE+WIDTH/2)
+        scaledy = int(self.y*scale_multiplier/SCALE+HEIGHT/2)
+        pygame.draw.circle(screen, self.colour, (scaledx,scaledy), self.width*scale_multiplier)
 
     def drawLine(self, screen):
         for pos in self.prev:
-            scaledx = int(pos[0]/SCALE+WIDTH/2)
-            scaledy = int(pos[1]/SCALE+HEIGHT/2)
+            scaledx = int(pos[0]*scale_multiplier/SCALE+WIDTH/2)
+            scaledy = int(pos[1]*scale_multiplier/SCALE+HEIGHT/2)
             screen.set_at((scaledx, scaledy), self.colour)
 
 
 # Sun
-sun = Object(WIDTH/2, HEIGHT/2, (0, 0), 1, 1.989e30, "YELLOW")
+sun = Object(WIDTH/2, HEIGHT/2, (0, 0), 15, 1.989e30, "YELLOW")
 
 # Mercury
 mercury = Object(
     WIDTH/2 + 57.91e9,  # Initial distance from the Sun (semi-major axis in meters)
     HEIGHT/2,
     (0, -47.87e3),  # Orbital velocity in m/s
-    1,  # Display size
+    2,  # Display size
     3.301e23,  # Mass in kg
     "GRAY"
 )
@@ -74,7 +76,7 @@ venus = Object(
     WIDTH/2 + 108.2e9,
     HEIGHT/2,
     (0, -35.02e3),
-    1,
+    5,
     4.867e24,
     "ORANGE"
 )
@@ -84,7 +86,7 @@ earth = Object(
     WIDTH/2 + 149.6e9,
     HEIGHT/2,
     (0, -29.78e3),
-    1,
+    5,
     5.972e24,
     "BLUE"
 )
@@ -94,7 +96,7 @@ mars = Object(
     WIDTH/2 + 227.9e9,
     HEIGHT/2,
     (0, -24.077e3),
-    1,
+    4,
     6.417e23,
     "RED"
 )
@@ -104,9 +106,10 @@ jupiter = Object(
     WIDTH/2 + 778.5e9,
     HEIGHT/2,
     (0, -13.07e3),
-    1,
+    20,
     1.898e27,
-    "BROWN"
+    "BROWN",
+    display_scale=0.37
 )
 
 # Saturn
@@ -114,9 +117,10 @@ saturn = Object(
     WIDTH/2 + 1.434e12,
     HEIGHT/2,
     (0, -9.69e3),
-    1,
+    14,
     5.683e26,
-    "YELLOW"
+    "YELLOW",
+    display_scale=0.23
 )
 
 # Uranus
@@ -124,9 +128,10 @@ uranus = Object(
     WIDTH/2 + 2.871e12,
     HEIGHT/2,
     (0, -6.81e3),
-    1,
+    12,
     8.681e25,
-    "CYAN"
+    "CYAN",
+    display_scale=0.15
 )
 
 # Neptune
@@ -134,13 +139,15 @@ neptune = Object(
     WIDTH/2 + 4.495e12,
     HEIGHT/2,
     (0, -5.43e3),
-    1,
+    12,
     1.024e26,
-    "BLUE"
+    "BLUE",
+    display_scale=0.12
 )
 
-planets = [earth, mercury, venus, mars, jupiter, neptune, uranus]
+scale_multiplier = 1
 
+planets = [earth, mercury, venus, mars, jupiter, neptune, uranus, saturn]
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Planets")
@@ -156,6 +163,11 @@ while running:
     for event in pygame.event.get(): 
         if event.type == pygame.QUIT: 
             running = False
+        elif event.type == pygame.MOUSEWHEEL:
+            if event.y>0:
+                scale_multiplier+=0.1
+            else:
+                scale_multiplier-=0.1
 
     sun.draw(screen)
 
